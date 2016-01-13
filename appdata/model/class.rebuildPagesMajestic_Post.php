@@ -4,9 +4,8 @@
 		
 		private $title;
 		private $url;
-		private $numOfexternalBacklinks;
 
-		public function __construct($title, $url, $numOfexternalBacklinks) {
+		public function __construct($title, $url) {
 			$this->title = $title;
 			$this->url = $url;
 		}
@@ -17,10 +16,6 @@
 
 		public function getUrl() {
 			return $this->url;
-		}
-
-		public function getNumOfExternalBacklinks() {
-			return $this->numOfexternalBacklinks;
 		}
 
 	}

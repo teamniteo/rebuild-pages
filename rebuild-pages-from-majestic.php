@@ -7,7 +7,11 @@
         Author URI:  www.niteoweb.com
      */
    
-    include 'appdata/model/class.rebuildPagesMajestic_Post.php';
+    // Load models
+    include_once 'appdata/model/class.rebuildPagesMajestic_Post.php';
+
+    // Load controllers
+    include_once 'appdata/controller/class.rebuildPagesMajestic_CSVParser.php';
 
     class Rebuild_Pages_From_Majestic {
 
@@ -50,9 +54,10 @@
         function form() {
             
     		$opt_min_backlinks = $this->process_option('ebn_min_backlinks', 0, $_POST);
+            $nonce = wp_create_nonce('majestic_importer_nonce');
             
             if ('POST' == $_SERVER['REQUEST_METHOD']) {
-                $this->post(compact('opt_min_backlinks'));
+                $this->handleUploadedData(compact('opt_min_backlinks'));
             }
 
             include 'appdata/view/main_settings_view.php';
@@ -83,7 +88,14 @@
          * @return void
          * 
          */
-        private function post($options) {
+        private function handleUploadedData($options) {
+
+            // Check if we have the correct nonce value for the form, else ignore the whole request
+            if (!wp_verify_nonce($_POST['ebn_nonce'], 'majestic_importer_nonce')) {
+                $this->log['error'][] = 'Authentication failed. Please refresh the page and try again.';
+                $this->print_messages();
+                return;
+            }
 
             if (empty($_FILES['ebn_import']['tmp_name'])) {
                 $this->log['error'][] = 'No file uploaded, aborting.';
@@ -97,122 +109,75 @@
                 return;
             }
 
-            //require_once 'File_CSV_DataSource/DataSource.php';
-
-            $time_start = microtime(true);
-    		
-            //$csv = new File_CSV_DataSource;
-            $file = $_FILES['ebn_import']['tmp_name'];
-            $this->stripBOM($file);
-    		$row = 1;
-    		$skipped = 0;
-            $imported = 0;
-            $mappings = array();
-            $home_url = get_home_url();
-    		
-    		if (($handle = fopen($file, "r")) !== FALSE) {
-    			$data = fgetcsv($handle, filesize($file));
-    			if(!$this->mappings) 
-    				$this->mappings = $data; 
-    			while (($data = fgetcsv($handle, filesize($file))) !== FALSE) {
-    				//print_r($data);
-    				if($data[0]) { 
-    					foreach($data as $key => $value) 
-    					   $converted_data[$this->mappings[$key]] = addslashes($value); 
-    					//print_r($converted_data);
-    					if (convert_chars($converted_data['ReferringExtBackLinks']) >= $options['opt_min_backlinks']) {
-    						if ($post_id = $this->create_post($converted_data, $options, $home_url)) {
-    							$imported++;
-    						} else {
-    							$skipped++;
-    						}
-    					}
-    				}                       
-    				
-    			}
-    			fclose($handle);
-    		}
-    		else{
-    			$this->log['error'][] = 'Failed to load file, aborting.';
+            if (is_plugin_active('custom-permalinks')) {
+                $this->log['error'][] = 'Please install and activate the Custom Permalinks plugin before using this plugin.';
                 $this->print_messages();
                 return;
-    		}
-    		if (file_exists($file)) {
-                @unlink($file);
             }
+
+            $time_start = microtime(true);
+            $csvParser = new rebuildPagesMajestic_CSVParser($this->log, $options);
+            $imported_posts = $csvParser->parseUploadedMajesticFile();
+
+            $imported = 0;
+
+            foreach($imported_posts as $post) {
+                $id = $this->create_post($post, $options, get_home_url());
+                if ($id) {
+                    $imported++;
+                }
+            }
+
             $exec_time = microtime(true) - $time_start;
 
-            if ($skipped) {
-                $this->log['notice'][] = "<b>Skipped {$skipped} pages .</b>";
-            }
             $this->log['notice'][] = sprintf("<b>Imported {$imported} pages in %.2f seconds.</b>", $exec_time);
             $this->print_messages();
-        }
 
-        private function create_post($data, $options, $home_url) {
-
-            $opt_min_backlinks = isset($options['opt_min_backlinks']) ? $options['opt_min_backlinks'] : 0;
-            $guid = parse_url($data['URL'], PHP_URL_PATH);
-    		$guid = ltrim($guid, '/');
-            $data = array_merge($this->defaults, $data);
-
-            $post_content = sprintf('Oops. Page not found. Go to <a href="%s">homepage</a>', $home_url);
-
-            $new_post = array(
-                'post_title'    => convert_chars($data['Title']),
-    			'post_content'  => $post_content,
-                'post_status'   => 'publish',
-                'post_type'     => 'page',
-    			'guid'          => $guid,
-                'post_name'     => convert_chars($data['Title'])
-            );
-
-            // create!
-            $id = wp_insert_post($new_post);
-    		if ($id) {
-    			 if ( ! add_post_meta( $id, 'custom_permalink', $guid, true ) ) { 
-    				update_post_meta ( $id, 'custom_permalink', $guid);
-    			}
-    		}
-            return $id;
         }
 
         /**
-         * 
-         * Delete BOM from UTF-8 file.
          *
-         * @param string $fname
+         * Create new WordPress page.
          * 
-         * @return void
+         * @param  [object] $post     Post object, class rebuildPagesMajestic_Post
+         * @param  [array]  $options  Array of plugin options.
+         * @param  [string] $home_url Home url of WordPress blog
+         * 
+         * @return [integer | null] Returnes created post id or null if failed.
          * 
          */
-        private function stripBOM($fname) {
+        private function create_post($post, $options, $home_url) {
 
-            $res = fopen($fname, 'rb');
-            if (false !== $res) {
-                $bytes = fread($res, 3);
-                if ($bytes == pack('CCC', 0xef, 0xbb, 0xbf)) {
-                    $this->log['notice'][] = 'Getting rid of byte order mark...';
-                    fclose($res);
+            if ($post) {
+                $opt_min_backlinks = isset($options['opt_min_backlinks']) ? $options['opt_min_backlinks'] : 0;
+                $guid = parse_url($post->getUrl(), PHP_URL_PATH);
+                $guid = ltrim($guid, '/');
 
-                    $contents = file_get_contents($fname);
-                    if (false === $contents) {
-                        trigger_error('Failed to get file contents.', E_USER_WARNING);
+                $post_content = sprintf('Oops. Page not found. Go to <a href="%s">homepage</a>', $home_url);
+
+                $new_post = array(
+                    'post_title'    => convert_chars($post->getTitle()),
+                    'post_content'  => $post_content,
+                    'post_status'   => 'publish',
+                    'post_type'     => 'page',
+                    'guid'          => $guid,
+                    'post_name'     => convert_chars($post->getTitle())
+                );
+
+                $id = wp_insert_post($new_post);
+                if ($id) {
+                     if(!add_post_meta($id, 'custom_permalink', $guid, true)) { 
+                        update_post_meta($id, 'custom_permalink', $guid);
                     }
-                    $contents = substr($contents, 3);
-                    $success = file_put_contents($fname, $contents);
-                    if (false === $success) {
-                        trigger_error('Failed to put file contents.', E_USER_WARNING);
-                    }
-                } else {
-                    fclose($res);
                 }
-            } else {
-                $this->log['error'][] = 'Failed to open file, aborting.';
+                return $id;                
             }
-        }
-    }
 
+            return null;
+
+        }
+
+    }
 
     function ebn_admin_menu() {
         $plugin = new Rebuild_Pages_From_Majestic;
