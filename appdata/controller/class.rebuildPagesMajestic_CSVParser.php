@@ -66,7 +66,7 @@
 	    					foreach($data as $key => $value) {
 	    						$line[$mappings[$key]] = addslashes($value);
 	    					}
-	    					if ($line['Title'] && $line['URL'] && $line['ReferringExtBackLinks']) {
+	    					if (isset($line['Title']) && isset($line['URL']) && isset($line['ReferringExtBackLinks'])) {
 		    					$externalBacklinks = convert_chars($line['ReferringExtBackLinks']);
 		    					if ($externalBacklinks >= $this->options['opt_min_backlinks']) {
 			    					$post = new rebuildPagesMajestic_Post(
