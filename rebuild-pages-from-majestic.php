@@ -109,7 +109,7 @@
                 return;
             }
 
-            if (is_plugin_active('custom-permalinks')) {
+            if (!is_plugin_active('custom-permalinks')) {
                 $this->log['error'][] = 'Please install and activate the Custom Permalinks plugin before using this plugin.';
                 $this->print_messages();
                 return;
