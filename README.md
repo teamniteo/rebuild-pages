@@ -1,61 +1,24 @@
-=== Rebuild Pages from Majestic ===
-Contributors: NiteoWeb Ltd.
-Tags: ebn csv import, ebn majestic csv import
+## Info
 
-Grab URL from CSV files and create pages for all those URL's
+Contributors: niteoweb
+Tags: rebuild pages, majestic
+Requires at least: 4.0
+Tested up to: 4.4.1
+Stable tag: 1.0
 
+Rebuild Pages will rebuild page URLs from a CSV downloaded from Majestic.com.
 
-== Description ==
-Rebuild pages with backlinks by importing Majestic CSV export.
+## Description
 
-= Features =
+Rebuild Pages will rebuild page URLs from a CSV downloaded from Majestic.com. You can select a minimum amount of backlinks for a URL to get rebuilt.
 
+## Plugin Features
 
-== Screenshots ==
+* Rebuild URLs from a CSV.
+* Select the minimum amount of backlinks for a URL to get rebuilt.
 
+## Installation
 
-
-== Installation ==
-
-Installing the plugin:
-
-1.  Unzip the plugin's directory into `wp-content/plugins`.
-2.  Activate the plugin through the 'Plugins' menu in WordPress.
-3.  The plugin will be available under Tools -> EBN Importer on
-    WordPress administration page.
-
-
-== Usage ==
-
-Click on the EBN Importer link on your WordPress admin page, choose the
-file you would like to import, fill minimum backlinks required by any URL 
-for which page would be created and click Import. The `examples` directory
-inside the plugin's directory contains one file that demonstrate
-how to use the plugin. The best way to get started is to import the 
-file and look at the results.
-
-CSV is a tabular format that consists of rows and columns. 
-
-= Basic post information =
-
-= Custom fields =
-
-
-= General remarks =
-
-*   WordPress pages [don't have categories or tags][pages].
-
-
-This plugin uses [php-csv-parser][3] by Kazuyoshi Tlacaelel.
-It was inspired by Denis Kobozev [CSV Importer] plugin.
-
-Contributors:
-
-[3]: http://code.google.com/p/php-csv-parser/
-
-
-== Changelog ==
-
-= v0.1.0 =
-*   Initial version of the plugin
-
+1. Upload 'rebuild-pages' directory to the '/wp-content/plugins/' directory
+2. Activate the plugin through the 'Plugins' menu in WordPress
+3. Go to **Tools** menu and then **Rebuild Pages* to configure
