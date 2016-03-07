@@ -2,7 +2,7 @@
 /*
     Plugin Name: Rebuild Pages from Majestic
     Description: Rebuild pages with backlinks by importing Majestic CSV export.
-    Version: 1.0.1
+    Version: 1.0.2
     Runtime: 5.5
     Author: NiteoWeb Ltd.
     Author URI:  www.niteoweb.com
