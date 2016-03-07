@@ -9,8 +9,6 @@ class TestApp extends PHPUnit_Framework_TestCase
 
     function test_csv()
     {
-
-
         $desired_outputs = array(
             0,
             5
