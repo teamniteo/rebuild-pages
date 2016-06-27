@@ -6,6 +6,12 @@ web:
    - ./src:/var/www/html/wp-content/plugins/rebuild_pages:ro
   links:
    - mysql
+admin:
+  image: phpmyadmin/phpmyadmin
+  ports:
+   - 81:80
+  links:
+   - mysql:db
 mysql:
   image: mysql
   ports:
@@ -13,3 +19,8 @@ mysql:
   environment:
     MYSQL_DATABASE: wordpress
     MYSQL_ROOT_PASSWORD: wordpress
+mailhog:
+  image: mailhog/mailhog
+  ports:
+    - 8025:8025
+    - 1025

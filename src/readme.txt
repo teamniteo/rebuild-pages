@@ -4,7 +4,7 @@ Contributors: niteoweb
 Tags: rebuild pages, majestic
 Requires at least: 4.0
 Tested up to: 4.4.1
-Stable tag: 1.0
+Stable tag: 2.0.0
 
 Rebuild Pages will rebuild page URLs from a CSV downloaded from Majestic.com.
 
