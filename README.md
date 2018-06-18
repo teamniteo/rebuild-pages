@@ -22,3 +22,7 @@ Rebuild Pages will rebuild page URLs from a CSV downloaded from Majestic.com. Yo
 1. Upload 'rebuild-pages' directory to the '/wp-content/plugins/' directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Go to **Tools** menu and then **Rebuild Pages* to configure
+
+## We're hiring!
+
+At Niteo we regularly contribute back to the Open Source community. If you do too, we'd like to invite you to [join our team](https://niteo.co/careers)!
